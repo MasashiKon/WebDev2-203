@@ -1,8 +1,9 @@
 const listElement = document.querySelector(".posts")
 const fetchButton = document.querySelector("#available-posts button")
 const postTemplate = document.querySelector("template")
+const postForm = document.querySelector("form");
 
-async function sendHttpRequest(method, url){
+async function sendHttpRequest(method, url, dataObj = {title: "default", body: "default"}){
     //with XHR
     // const promise = new Promise((resolve, reject) => {
     //     const xhr = new XMLHttpRequest()
@@ -28,8 +29,13 @@ async function sendHttpRequest(method, url){
     // return await fetch(url, {method}).then(r => r.json())
 
     //with axios
-    const { data } = await axios(url, { method })
-    return data
+    if(method === "GET") {
+        const { data } = await axios(url, { method })
+        return data
+    } else if(method === "POST") {
+        const { data } = await axios(url, { method, data: {title: dataObj.title, body: dataObj.body}})
+        return data
+    }
     // return axios.get(url)
 }
 
@@ -48,5 +54,23 @@ async function fetchPosts() {
     }
 }
 
+async function addPost(e) {
+
+    e.preventDefault();
+    const title = e.target.querySelector("#title").value;
+    const body = e.target.querySelector("#content").value;
+
+    const responseData = await sendHttpRequest("POST", "https://jsonplaceholder.typicode.com/posts", {title, body})
+    
+    console.log(responseData);
+    const postElClone = document.importNode(postTemplate.content, true)
+    postElClone.querySelector("h2").textContent = responseData.title
+    postElClone.querySelector("p").textContent = responseData.body
+    postElClone.querySelector("li").id = responseData.id
+    listElement.appendChild(postElClone);
+
+}
+
 // READ/GET
 fetchButton.addEventListener("click", fetchPosts)
+postForm.addEventListener("submit", addPost)
